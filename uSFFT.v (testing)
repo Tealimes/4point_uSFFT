@@ -1,10 +1,10 @@
 //By Alexander Peacock, undergrad at UCF ECE
 //email: alexpeacock56ten@gmail.com
 
-`include "uButterfly.v"
-
 `ifndef uSFFT
 `define uSFFT
+
+`include "uButterfly.v"
 
 module uSFFT #(
     parameter BITWIDTH = 8,
