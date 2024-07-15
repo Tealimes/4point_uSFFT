@@ -37,9 +37,6 @@ module uSFFT #(
 
 );
 
-    //TODO: FIGURE OUT HOW TO WORK AROUND oBIMG AND oBREAL
-    //For now they're just assumed to be the exact same
-    //TODO: make functions more clear
     //the ouputs of the initial input butterflies
     wire mid1_Real0;
     wire mid1_Img0;
