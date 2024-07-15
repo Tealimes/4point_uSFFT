@@ -1,0 +1,130 @@
+//By Alexander Peacock, undergrad at UCF ECE
+//email: alexpeacock56ten@gmail.com
+
+`ifndef uSFFT
+`define uSFFT
+
+`include "uButterfly.v"
+
+module uSFFT #(
+    parameter BITWIDTH = 8,
+    parameter BINPUT = 2
+) (
+    input wire iClk,
+    input wire iRstN,
+    input wire loadW,
+    input wire iClr,
+    input wire iAReal0,
+    input wire iAImg0,
+    input wire iAReal1,
+    input wire iAImg1,
+    input wire iBReal0,
+    input wire iBImg0,
+    input wire iBReal1,
+    input wire iBImg1,
+    input wire [BITWIDTH-1:0] iwReal,
+    input wire [BITWIDTH-1:0] iwImg,
+    output wire oCReal0,
+    output wire oCImg0,
+    output wire oCReal1,
+    output wire oCImg1,
+    output wire oDReal0,
+    output wire oDImg0,
+    output wire oDReal1,
+    output wire oDImg1
+
+);
+
+    //the ouputs of the initial input butterflies
+    wire mid1_Real0;
+    wire mid1_Img0;
+    wire mid1_Real1;
+    wire mid1_Img1;
+    wire mid2_Real0;
+    wire mid2_Img0;
+    wire mid2_Real1;
+    wire mid2_Img1;
+
+    uButterfly #(
+        .BITWIDTH(BITWIDTH),
+        .BINPUT(BINPUT)
+    ) u_uButterfly_in1 (
+        .iClk(iClk),
+        .iRstN(iRstN),
+        .loadW(loadW),
+        .iClr(iClr),
+        .iReal0(iAReal0),
+        .iImg0(iAImg0),
+        .iReal1(iAReal1),
+        .iImg1(iAImg1),
+        .iwReal(iwReal),
+        .iwImg(iwImg),
+        .oReal0(mid1_Real0),
+        .oImg0(mid1_Img0),
+        .oReal1(mid1_Real1),
+        .oImg1(mid1_Img1)
+    );
+
+    uButterfly #(
+        .BITWIDTH(BITWIDTH),
+        .BINPUT(BINPUT)
+    ) u_uButterfly_in2 (
+        .iClk(iClk),
+        .iRstN(iRstN),
+        .loadW(loadW),
+        .iClr(iClr),
+        .iReal0(iBReal0),
+        .iImg0(iBImg0),
+        .iReal1(iBReal1),
+        .iImg1(iBImg1),
+        .iwReal(iwReal),
+        .iwImg(iwImg),
+        .oReal0(mid2_Real0),
+        .oImg0(mid2_Img0),
+        .oReal1(mid2_Real1),
+        .oImg1(mid2_Img1)
+    );
+
+    uButterfly #(
+        .BITWIDTH(BITWIDTH),
+        .BINPUT(BINPUT)
+    ) u_uButterfly_out13 (
+        .iClk(iClk),
+        .iRstN(iRstN),
+        .loadW(loadW),
+        .iClr(iClr),
+        .iReal0(mid1_Real0),
+        .iImg0(mid1_Img0),
+        .iReal1(mid2_Real0),
+        .iImg1(mid2_Img0),
+        .iwReal(iwReal),
+        .iwImg(iwImg),
+        .oReal0(oCReal0),
+        .oImg0(oCImg0),
+        .oReal1(oCReal1),
+        .oImg1(oCImg1)
+    );
+
+    uButterfly #(
+        .BITWIDTH(BITWIDTH),
+        .BINPUT(BINPUT)
+    ) u_uButterfly_out24 (
+        .iClk(iClk),
+        .iRstN(iRstN),
+        .loadW(loadW),
+        .iClr(iClr),
+        .iReal0(mid1_Real1),
+        .iImg0(mid1_Img1),
+        .iReal1(mid2_Real1),
+        .iImg1(mid2_Img1),
+        .iwReal(iwReal),
+        .iwImg(iwImg),
+        .oReal0(oDReal0),
+        .oImg0(oDImg0),
+        .oReal1(oDReal1),
+        .oImg1(oDImg1)
+    );
+
+endmodule
+
+`endif 
