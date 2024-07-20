@@ -5,363 +5,187 @@
 `include "uButterfly.v"
 `include "sobolrng.v"
 `define TESTAMOUNT 10
+`define NUMINPUTS_C 4
+
 //used to check errors
 class errorcheck;
-    real uResult_CReal0;
-    real uResult_CImg0;
-    real uResult_CReal1;
-    real uResult_CImg1;
-    real eResult_CReal0;
-    real eResult_CImg0;
-    real eResult_CReal1;
-    real eResult_CImg1;
-    real uResult_DReal0;
-    real uResult_DImg0;
-    real uResult_DReal1;
-    real uResult_DImg1;
-    real eResult_DReal0;
-    real eResult_DImg0;
-    real eResult_DReal1;
-    real eResult_DImg1;
+    real uResult_Real [`NUMINPUTS_C-1:0];
+    real uResult_Img [`NUMINPUTS_C-1:0];
+    real eResult_Real [`NUMINPUTS_C-1:0];
+    real eResult_Img [`NUMINPUTS_C-1:0];
     real fdenom;
-    real cntAReal0;
-    real cntAImg0;
-    real cntAReal1;
-    real cntAImg1;
-    real cntBReal0;
-    real cntBImg0;
-    real cntBReal1;
-    real cntBImg1;
+    real cntReal [`NUMINPUTS_C-1:0];
+    real cntImg [`NUMINPUTS_C-1:0];
     real cntiwImg;
     real cntiwReal;
-    real outCReal0;
-    real outCImg0;
-    real outCReal1;
-    real outCImg1;
-    real outDReal0;
-    real outDImg0;
-    real outDReal1;
-    real outDImg1;
-    real asum_CReal0;
-    real asum_CImg0;
-    real asum_CReal1;
-    real asum_CImg1;
-    real asum_DReal0;
-    real asum_DImg0;
-    real asum_DReal1;
-    real asum_DImg1;
-    real mse_CReal0;
-    real mse_CImg0;
-    real mse_CReal1;
-    real mse_CImg1;
-    real rmse_CReal0;
-    real rmse_CImg0;
-    real rmse_CReal1;
-    real rmse_CImg1;
-    real mse_DReal0;
-    real mse_DImg0;
-    real mse_DReal1;
-    real mse_DImg1;
-    real rmse_DReal0;
-    real rmse_DImg0;
-    real rmse_DReal1;
-    real rmse_DImg1;
+    real outReal [`NUMINPUTS_C-1:0];
+    real outImg [`NUMINPUTS_C-1:0];
+    real asum_Real [`NUMINPUTS_C-1:0];
+    real asum_Img [`NUMINPUTS_C-1:0];
+    real mse_Real [`NUMINPUTS_C-1:0];
+    real mse_Img [`NUMINPUTS_C-1:0];
+    real rmse_Real [`NUMINPUTS_C-1:0];
+    real rmse_Img [`NUMINPUTS_C-1:0];
     static int j;
 
     function new();
-        asum_CReal0 = 0;
-        asum_CImg0 = 0;
-        asum_CReal1 = 0;
-        asum_CImg1 = 0;
-        asum_DReal0 = 0;
-        asum_DImg0 = 0;
-        asum_DReal1 = 0;
-        asum_DImg1 = 0;
+        asum_Real = '{default: '0};
+        asum_Img = '{default: '0};
         fdenom = 0;
-        cntAReal0 = 0;
-        cntAImg0 = 0;
-        cntAReal1 = 0;
-        cntAImg1 = 0;
-        cntBReal0 = 0;
-        cntBImg0 = 0;
-        cntBReal1 = 0;
-        cntBImg1 = 0;
+        cntReal = '{default: '0};
+        cntImg = '{default: '0};
         cntiwReal = 0;
         cntiwImg = 0;
-        outCReal0 = 0;
-        outCImg0 = 0;
-        outCReal1 = 0;
-        outCImg1 = 0;
-        outDReal0 = 0;
-        outDImg0 = 0;
-        outDReal1 = 0;
-        outDImg1 = 0;
+        outReal = '{default: '0};
+        outImg = '{default: '0};
         j = 0;
     endfunction
 
     //accumulates to account for bitstreams
-    function count(real a, b, c, d, e, f, g, h, i, j, oA, oB, oC, oD, oE, oF, oG, oH);
-        cntAReal0 = cntAReal0 + a;
-        cntAImg0 = cntAImg0 + b;
-        cntAReal1 = cntAReal1 + c;
-        cntAImg1 = cntAImg1 + d;
-        cntBReal0 = cntBReal0 + e;
-        cntBImg0 = cntBImg0 + f;
-        cntBReal1 = cntBReal1 + g;
-        cntBImg1 = cntBImg1 + h;
-        cntiwReal = cntiwReal + i;
-        cntiwImg = cntiwImg + j;
-        outCReal0 = outCReal0 + oA;
-        outCImg0 = outCImg0 + oB;
-        outCReal1 = outCReal1 + oC;
-        outCImg1 = outCImg1 + oD;
-        outDReal0 = outDReal0 + oE;
-        outDImg0 = outDImg0 + oF;
-        outDReal1 = outDReal1 + oG;
-        outDImg1 = outDImg1 + oH;
+    function count(real a[`NUMINPUTS_C-1:0], b[`NUMINPUTS_C-1:0], c[`NUMINPUTS_C-1:0], d[`NUMINPUTS_C-1:0], oA, oB);
+        for(int f = 0; f < `NUMINPUTS_C; f++) begin
+            cntReal[f] = cntReal[f] + a[f];
+            cntImg[f] = cntImg[f] + b[f];
+            outReal[f] = outReal[f] + c[f];
+            outImg[f] = outImg[f] + d[f];
 
+        end
+        cntiwReal = cntiwReal + oA;
+        cntiwImg = cntiwImg + oB;
         fdenom++;
     endfunction
 
     //sums the results of a bitstream cycle
     function fSUM();
-        real biAReal0; 
-        real biAImg0;
-        real biAReal1;
-        real biAImg1;
-        real biBReal0; 
-        real biBImg0;
-        real biBReal1;
-        real biBImg1;
+        real biReal [`NUMINPUTS_C-1:0]; 
+        real biImg [`NUMINPUTS_C-1:0];
         real biwReal;
         real biwImg;
 
         //eResult for first two butterflies
-        real bimid1_Real0;
-        real bimid1_Img0;
-        real bimid1_Real1;
-        real bimid1_Img1;
-        real bimid2_Real0;
-        real bimid2_Img0;
-        real bimid2_Real1;
-        real bimid2_Img1;
+        real bimid_Real [`NUMINPUTS_C-1:0];
+        real bimid_Img [`NUMINPUTS_C-1:0];
 
         j++; //counts current run
 
-        biAReal0 = (2*(cntAReal0/fdenom)) - 1;
-        biAImg0 = (2*(cntAImg0/fdenom)) - 1;
-        biAReal1 = (2*(cntAReal1/fdenom)) - 1;
-        biAImg1 = (2*(cntAImg1/fdenom)) - 1;
-        biBReal0 = (2*(cntBReal0/fdenom)) - 1;
-        biBImg0 = (2*(cntBImg0/fdenom)) - 1;
-        biBReal1 = (2*(cntBReal1/fdenom)) - 1;
-        biBImg1 = (2*(cntBImg1/fdenom)) - 1;
+        //bipolar representation
+        for(int d = 0; d < `NUMINPUTS_C; d++) begin
+            biReal[d] = (2*(cntReal[d]/fdenom)) - 1;
+            biImg[d] = (2*(cntImg[d]/fdenom)) - 1;
+        end
         biwReal = (2*(cntiwReal/fdenom)) - 1;
         biwImg = (2*(cntiwImg/fdenom)) - 1;
 
-        //bipolar representation
+
         
         $display("Run <%.0f>: ", j);
-        $display("Length of bitstream = %.0f", fdenom);
-        $display("Number of 1s in input AReal0 = %.0f", cntAReal0);
-        $display("Number of 1s in input AImg0 = %.0f", cntAImg0);
-        $display("Number of 1s in input AReal1 = %.0f", cntAReal1);
-        $display("Number of 1s in input AImg1 = %.0f", cntAImg1);
-        $display("Number of 1s in input BReal0 = %.0f", cntBReal0);
-        $display("Number of 1s in input BImg0 = %.0f", cntBImg0);
-        $display("Number of 1s in input BReal1 = %.0f", cntBReal1);
-        $display("Number of 1s in input BImg1 = %.0f", cntBImg1);
         $display("Number of 1s in input wReal = %.0f", cntiwReal);
         $display("Number of 1s in input wImg = %.0f", cntiwImg);
-        $display("Number of 1s in output CReal0 = %.0f", outCReal0);
-        $display("Number of 1s in output CImg0 = %.0f", outCImg0);
-        $display("Number of 1s in output CReal1 = %.0f", outCReal1);
-        $display("Number of 1s in output CImg1 = %.0f\n", outCImg1);
-        $display("Number of 1s in output DReal0 = %.0f", outDReal0);
-        $display("Number of 1s in output DImg0 = %.0f", outDImg0);
-        $display("Number of 1s in output DReal1 = %.0f", outDReal1);
-        $display("Number of 1s in output DImg1 = %.0f\n", outDImg1);
-
-        $display("Bipolar AReal0 value = %.9f", biAReal0);
-        $display("Bipolar AImage0 value = %.9f", biAImg0);
-        $display("Bipolar AReal1 value = %.9f", biAReal1);
-        $display("Bipolar AImage1 value = %.9f", biAImg1);
-        $display("Bipolar BReal0 value = %.9f", biBReal0);
-        $display("Bipolar BImage0 value = %.9f", biBImg0);
-        $display("Bipolar BReal1 value = %.9f", biBReal1);
-        $display("Bipolar BImage1 value = %.9f", biBImg1);
+        $display("Length of bitstream = %.0f", fdenom);
+        for(int r = 0; r < `NUMINPUTS_C; r++) begin
+            $display("Number of 1s in input Real[%0d] = %.0f", r, cntReal[r]);
+            $display("Number of 1s in input Img[%0d] = %.0f", r, cntImg[r]);
+            $display("Number of 1s in output Real[%0d] = %.0f", r, outReal[r]);
+            $display("Number of 1s in output Img[%0d] = %.0f", r, outImg[r]);
+            $display("Bipolar Real[%0d] value = %.9f", r, biReal[r]);
+            $display("Bipolar Image[%0d] value = %.9f\n", r, biImg[r]);
+        end
         $display("Bipolar wReal value = %.9f", biwReal);
         $display("Bipolar wImg value = %.9f\n", biwImg);
-        
+
         //unary result
-        uResult_CReal0 = (2*(outCReal0/fdenom)) - 1;
-        uResult_CImg0 = (2*(outCImg0/fdenom)) - 1;
-        uResult_CReal1 = (2*(outCReal1/fdenom)) - 1;
-        uResult_CImg1 = (2*(outCImg1/fdenom)) - 1;
-        uResult_DReal0 = (2*(outDReal0/fdenom)) - 1;
-        uResult_DImg0 = (2*(outDImg0/fdenom)) - 1;
-        uResult_DReal1 = (2*(outDReal1/fdenom)) - 1;
-        uResult_DImg1 = (2*(outDImg1/fdenom)) - 1;
-
-        //middle expected results
-        bimid1_Real0 = (biAReal0 + ((biAReal1*biwReal) - (biAImg1*biwImg)))/4;
-        bimid1_Img0 = (biAImg0 + ((biAReal1*biwImg) + (biAImg1*biwReal)))/4;
-        bimid1_Real1 = (biAReal0 - ((biAReal1*biwReal) - (biAImg1*biwImg)))/4;
-        bimid1_Img1 = (biAImg0 - ((biAReal1*biwImg) + (biAImg1*biwReal)))/4;
-        bimid2_Real0 = (biBReal0 + ((biBReal1*biwReal) - (biBImg1*biwImg)))/4;
-        bimid2_Img0 = (biBImg0 + ((biBReal1*biwImg) + (biBImg1*biwReal)))/4;
-        bimid2_Real1 = (biBReal0 - ((biBReal1*biwReal) - (biBImg1*biwImg)))/4;
-        bimid2_Img1 = (biBImg0 - ((biBReal1*biwImg) + (biBImg1*biwReal)))/4;
-
-        //expected results
-        eResult_CReal0 = (bimid1_Real0 + ((bimid2_Real0*biwReal) - (bimid2_Img0*biwImg)))/4; 
-        eResult_CImg0 = (bimid1_Img0 + ((bimid2_Real0*biwImg) + (bimid2_Img0*biwReal)))/4;
-        eResult_CReal1 = (bimid1_Real0 - ((bimid2_Real0*biwReal) - (bimid2_Img0*biwImg)))/4;
-        eResult_CImg1 = (bimid1_Img0 - ((bimid2_Real0*biwImg) + (bimid2_Img0*biwReal)))/4;
-        eResult_DReal0 = (bimid1_Real1 + ((bimid2_Real1*biwReal) - (bimid2_Img1*biwImg)))/4; 
-        eResult_DImg0 = (bimid1_Img1 + ((bimid2_Real1*biwImg) + (bimid2_Img1*biwReal)))/4;
-        eResult_DReal1 = (bimid1_Real1 - ((bimid2_Real1*biwReal) - (bimid2_Img1*biwImg)))/4;
-        eResult_DImg1 = (bimid1_Img1 - ((bimid2_Real1*biwImg) + (bimid2_Img1*biwReal)))/4;
-
-        $display("Unary result C0 = %.9f + %.9fi", uResult_CReal0, uResult_CImg0);
-        $display("Unary result C1 = %.9f + %.9fi", uResult_CReal1, uResult_CImg1);
-        $display("Unary result D0 = %.9f + %.9fi", uResult_DReal0, uResult_DImg0);
-        $display("Unary result D1 = %.9f + %.9fi\n", uResult_DReal1, uResult_DImg1);
+        for(int y = 0; y < `NUMINPUTS_C; y++) begin
+            uResult_Real[y] = (2*(outReal[y]/fdenom)) - 1;
+            uResult_Img[y] = (2*(outImg[y]/fdenom)) - 1;
+            $display("Unary result[%0d] = %.9f + %.9fi", y, uResult_Real[y], uResult_Img[y]);
+        end
         
-        $display("Expected result C0 = %.9f + %.9fi", eResult_CReal0, eResult_CImg0);
-        $display("Expected result C1 = %.9f + %.9fi", eResult_CReal1, eResult_CImg1);
-        $display("Expected result D0 = %.9f + %.9fi", eResult_DReal0, eResult_DImg0);
-        $display("Expected result D1 = %.9f + %.9fi\n", eResult_DReal1, eResult_DImg1);
+        //middle expected results      
+        for(int e = 0; e < (`NUMINPUTS_C/2); e++) begin
+            bimid_Real[e*2] = (biReal[(e*2)] + ((biReal[(e*2)+1]*biwReal) - (biImg[(e*2)+1]*biwImg)))/4;
+            bimid_Img[e*2] = (biImg[(e*2)] + ((biReal[(e*2)+1]*biwImg) + (biImg[(e*2)+1]*biwReal)))/4;
+            bimid_Real[(e*2)+1] = (biReal[(e*2)] - ((biReal[(e*2)+1]*biwReal) - (biImg[(e*2)+1]*biwImg)))/4;
+            bimid_Img[(e*2)+1] = (biImg[(e*2)] - ((biReal[(e*2)+1]*biwImg) + (biImg[(e*2)+1]*biwReal)))/4;
+        end
+        
+        //expected results
+        eResult_Real[0] = (bimid_Real[0] + ((bimid_Real[2]*biwReal) - (bimid_Img[2]*biwImg)))/4; 
+        eResult_Img[0] = (bimid_Img[0] + ((bimid_Real[2]*biwImg) + (bimid_Img[2]*biwReal)))/4;
+        eResult_Real[2] = (bimid_Real[0] - ((bimid_Real[2]*biwReal) - (bimid_Img[2]*biwImg)))/4;
+        eResult_Img[2] = (bimid_Img[0] - ((bimid_Real[2]*biwImg) + (bimid_Img[2]*biwReal)))/4;
+        eResult_Real[1] = (bimid_Real[1] + ((bimid_Real[3]*biwReal) - (bimid_Img[3]*biwImg)))/4; 
+        eResult_Img[1] = (bimid_Img[1] + ((bimid_Real[3]*biwImg) + (bimid_Img[3]*biwReal)))/4;
+        eResult_Real[3] = (bimid_Real[1] - ((bimid_Real[3]*biwReal) - (bimid_Img[3]*biwImg)))/4;
+        eResult_Img[3] = (bimid_Img[1] - ((bimid_Real[3]*biwImg) + (bimid_Img[3]*biwReal)))/4;
 
-        asum_CReal0 = asum_CReal0 + ((uResult_CReal0 - eResult_CReal0) * (uResult_CReal0 - eResult_CReal0));
-        asum_CImg0 = asum_CImg0 + ((uResult_CImg0 - eResult_CImg0) * (uResult_CImg0 - eResult_CImg0));
-        asum_CReal1 = asum_CReal1 + ((uResult_CReal1 - eResult_CReal1) * (uResult_CReal1 - eResult_CReal1));
-        asum_CImg1 = asum_CImg1 + ((uResult_CImg1 - eResult_CImg1) * (uResult_CImg1 - eResult_CImg1));
-        asum_DReal0 = asum_DReal0 + ((uResult_DReal0 - eResult_DReal0) * (uResult_DReal0 - eResult_DReal0));
-        asum_DImg0 = asum_DImg0 + ((uResult_DImg0 - eResult_DImg0) * (uResult_DImg0 - eResult_DImg0));
-        asum_DReal1 = asum_DReal1 + ((uResult_DReal1 - eResult_DReal1) * (uResult_DReal1 - eResult_DReal1));
-        asum_DImg1 = asum_DImg1 + ((uResult_DImg1 - eResult_DImg1) * (uResult_DImg1 - eResult_DImg1));
-        $display("CReal0 cumulated square error = %.9f", asum_CReal0);
-        $display("CImg0 cumulated square error = %.9f", asum_CImg0);
-        $display("CReal1 cumulated square error = %.9f", asum_CReal1);
-        $display("CImg1 cumulated square error = %.9f\n", asum_CImg1);
-        $display("DReal0 cumulated square error = %.9f", asum_DReal0);
-        $display("DImg0 cumulated square error = %.9f", asum_DImg0);
-        $display("DReal1 cumulated square error = %.9f", asum_DReal1);
-        $display("DImg1 cumulated square error = %.9f\n", asum_DImg1);
+
+        for(int s = 0; s < `NUMINPUTS_C; s++) begin
+            $display("Expected result[%0d] = %.9f + %.9fi", s, eResult_Real[s], eResult_Img[s]);
+        end
+
+        for(int i = 0; i < `NUMINPUTS_C; i++) begin
+            asum_Real[i] = asum_Real[i] + ((uResult_Real[i] - eResult_Real[i]) * (uResult_Real[i] - eResult_Real[i]));
+            asum_Img[i] = asum_Img[i] + ((uResult_Img[i] - eResult_Img[i]) * (uResult_Img[i] - eResult_Img[i]));
+            $display("Real[%0d] cumulated square error = %.9f", i, asum_Real[i]);
+            $display("Img[%0d] cumulated square error = %.9f", i, asum_Img[i]);
+        end
+        $display("\n");
         
         //resets for next bitstreams
 
         fdenom = 0;
-        cntAReal0 = 0;
-        cntAImg0 = 0;
-        cntAReal1 = 0;
-        cntAImg1 = 0;
-        cntBReal0 = 0;
-        cntBImg0 = 0;
-        cntBReal1 = 0;
-        cntBImg1 = 0;
+        cntReal = '{default: '0};
+        cntImg = '{default: '0};
         cntiwReal = 0;
         cntiwImg = 0;
-        outCReal0 = 0;
-        outCImg0 = 0;
-        outCReal1 = 0;
-        outCImg1 = 0;
-        outDReal0 = 0;
-        outDImg0 = 0;
-        outDReal1 = 0;
-        outDImg1 = 0;
+        outReal = '{default: '0};
+        outImg = '{default: '0};
     endfunction
 
     //mean squared error
     function fMSE();
         $display("Final Results: "); 
-        mse_CReal0 = asum_CReal0 / `TESTAMOUNT;
-        mse_CImg0 = asum_CImg0 / `TESTAMOUNT;
-        mse_CReal1 = asum_CReal1 / `TESTAMOUNT;
-        mse_CImg1 = asum_CImg1 / `TESTAMOUNT;
-        mse_DReal0 = asum_DReal0 / `TESTAMOUNT;
-        mse_DImg0 = asum_DImg0 / `TESTAMOUNT;
-        mse_DReal1 = asum_DReal1 / `TESTAMOUNT;
-        mse_DImg1 = asum_DImg1 / `TESTAMOUNT;
-        $display("CReal0 mse: %.9f", mse_CReal0);
-        $display("CImg0 mse: %.9f", mse_CImg0);
-        $display("CReal1 mse: %.9f", mse_CReal1);
-        $display("CImg1 mse: %.9f", mse_CImg1);
-        $display("DReal0 mse: %.9f", mse_DReal0);
-        $display("DImg0 mse: %.9f", mse_DImg0);
-        $display("DReal1 mse: %.9f", mse_DReal1);
-        $display("DImg1 mse: %.9f", mse_DImg1);
+        for(int i = 0; i < `NUMINPUTS_C; i++) begin 
+            mse_Real[i] = asum_Real[i] / `TESTAMOUNT;
+            mse_Img[i] = asum_Img[i] / `TESTAMOUNT;
+            $display("Real[%0d] mse: %.9f", i, mse_Real[i]);
+            $display("Img[%0d] mse: %.9f", i, mse_Img[i]);
+        end
     endfunction
 
     //root mean square error
     function fRMSE();
-        rmse_CReal0 = $sqrt(mse_CReal0);
-        rmse_CImg0 = $sqrt(mse_CImg0);
-        rmse_CReal1 = $sqrt(mse_CReal1);
-        rmse_CImg1 = $sqrt(mse_CImg1);
-        rmse_DReal0 = $sqrt(mse_DReal0);
-        rmse_DImg0 = $sqrt(mse_DImg0);
-        rmse_DReal1 = $sqrt(mse_DReal1);
-        rmse_DImg1 = $sqrt(mse_DImg1);
-        $display("CReal0 rmse: %.9f", rmse_CReal0);
-        $display("CImg0 rmse: %.9f", rmse_CImg0);
-        $display("CReal1 rmse: %.9f", rmse_CReal1);
-        $display("CImg1 rmse: %.9f", rmse_CImg1);
-        $display("DReal0 rmse: %.9f", rmse_DReal0);
-        $display("DImg0 rmse: %.9f", rmse_DImg0);
-        $display("DReal1 rmse: %.9f", rmse_DReal1);
-        $display("DImg1 rmse: %.9f", rmse_DImg1);
+        for(int i = 0; i < `NUMINPUTS_C; i++) begin 
+            rmse_Real[i] = $sqrt(mse_Real[i]);
+            rmse_Img[i] = $sqrt(mse_Img[i]);
+            $display("Real[%0d] rmse: %.9f", i, rmse_Real[i]);
+            $display("Img[%0d] rmse: %.9f", i, rmse_Img[i]);
+        end
     endfunction
-
+    
 endclass
 
 module uSFFT_TB ();
     parameter BITWIDTH = 8;
     parameter BINPUT = 2;
+    parameter NUMINPUTS = 4;
     logic iClk;
     logic iRstN;
-    logic iAReal0;
-    logic iAImg0;
-    logic iAReal1;
-    logic iAImg1;
-    logic iBReal0;
-    logic iBImg0;
-    logic iBReal1;
-    logic iBImg1;
+    logic iReal [NUMINPUTS-1:0];
+    logic iImg [NUMINPUTS-1:0];
     logic iClr;
     logic loadW;
     logic oBReal;
     logic oBImg;
-    logic oCReal0;
-    logic oCImg0;
-    logic oCReal1;
-    logic oCImg1;
-    logic oDReal0;
-    logic oDImg0;
-    logic oDReal1;
-    logic oDImg1;
+    logic oReal [NUMINPUTS-1:0];
+    logic oImg [NUMINPUTS-1:0];
 
-    
     errorcheck error; //class for error checking
 
     //used for bitstream generation
-    logic [BITWIDTH-1:0] sobolseq_tbA1;
-    logic [BITWIDTH-1:0] sobolseq_tbB1;
-    logic [BITWIDTH-1:0] sobolseq_tbC1;
-    logic [BITWIDTH-1:0] sobolseq_tbD1;
-    logic [BITWIDTH-1:0] sobolseq_tbA2;
-    logic [BITWIDTH-1:0] sobolseq_tbB2;
-    logic [BITWIDTH-1:0] sobolseq_tbC2;
-    logic [BITWIDTH-1:0] sobolseq_tbD2;
-    logic [BITWIDTH-1:0] rand_iAReal0;
-    logic [BITWIDTH-1:0] rand_iAImg0;
-    logic [BITWIDTH-1:0] rand_iAReal1;
-    logic [BITWIDTH-1:0] rand_iAImg1;
-    logic [BITWIDTH-1:0] rand_iBReal0;
-    logic [BITWIDTH-1:0] rand_iBImg0;
-    logic [BITWIDTH-1:0] rand_iBReal1;
-    logic [BITWIDTH-1:0] rand_iBImg1;
+    logic [BITWIDTH-1:0] sobolseq_tb [(NUMINPUTS*2)-1:0];
+    logic [BITWIDTH-1:0] randReal [NUMINPUTS-1:0];
+    logic [BITWIDTH-1:0] randImg [NUMINPUTS-1:0];
     logic [BITWIDTH-1:0] iwReal;
     logic [BITWIDTH-1:0] iwImg;
 
@@ -370,163 +194,73 @@ module uSFFT_TB ();
     parameter PPCYCLE = 1;
 
     // dont change code below
-    logic result1 [PPCYCLE-1:0];
-    logic result_expected1;
-    assign result_expected1 = oCReal0;
-    logic result2 [PPCYCLE-1:0];
-    logic result_expected2;
-    assign result_expected2 = oCImg0;
-    logic result3 [PPCYCLE-1:0];
-    logic result_expected3;
-    assign result_expected3 = oCReal1;
-    logic result4 [PPCYCLE-1:0];
-    logic result_expected4;
-    assign result_expected4 = oCImg1;
+    logic resultReal [PPCYCLE-1:0][NUMINPUTS-1:0];
+    logic resultImg [PPCYCLE-1:0][NUMINPUTS-1:0];
+    logic result_expectedReal [NUMINPUTS-1:0];
+    logic result_expectedImg [NUMINPUTS-1:0];
 
-    logic result5 [PPCYCLE-1:0];
-    logic result_expected5;
-    assign result_expected5 = oDReal0;
-    logic result6 [PPCYCLE-1:0];
-    logic result_expected6;
-    assign result_expected6 = oDImg0;
-    logic result7 [PPCYCLE-1:0];
-    logic result_expected7;
-    assign result_expected7 = oDReal1;
-    logic result8 [PPCYCLE-1:0];
-    logic result_expected8;
-    assign result_expected8 = oDImg1;
+    integer l;
+    always@(*) begin
+        for(l = 0; l < NUMINPUTS; l = l + 1) begin
+            result_expectedReal[l] = oReal[l];
+            result_expectedImg[l] = oImg[l];
+        end
+    end
 
     genvar i;
     generate
         for (i = 1; i < PPCYCLE; i = i + 1) begin
             always@(posedge iClk or negedge iRstN) begin
+                integer k;
                 if (~iRstN) begin
-                    result1[i] <= 0;
-                    result2[i] <= 0;
-                    result3[i] <= 0;
-                    result4[i] <= 0;
-                    result5[i] <= 0;
-                    result6[i] <= 0;
-                    result7[i] <= 0;
-                    result8[i] <= 0;
+                    for(k = 0; k < NUMINPUTS; k = k + 1) begin 
+                        resultReal[i][k] <= 0;
+                        resultImg[i][k] <= 0;
+                    end
                 end else begin
-                    result1[i] <= result1[i-1];
-                    result2[i] <= result2[i-1];
-                    result3[i] <= result3[i-1];
-                    result4[i] <= result4[i-1];
-                    result5[i] <= result5[i-1];
-                    result6[i] <= result6[i-1];
-                    result7[i] <= result7[i-1];
-                    result8[i] <= result8[i-1];
+                    for(k = 0; k < NUMINPUTS; k = k + 1) begin
+                        resultReal[i][k] <= resultReal[i-1][k];
+                        resultImg[i][k] <= resultImg[i-1][k];
+                    end
                 end
             end
         end
     endgenerate
 
+    integer m;
+
     always@(posedge iClk or negedge iRstN) begin
         if (~iRstN) begin
-            result1[0] <= 0;
-            result2[0] <= 0;
-            result3[0] <= 0;
-            result4[0] <= 0;
-            result5[0] <= 0;
-            result6[0] <= 0;
-            result7[0] <= 0;
-            result8[0] <= 0;
+            for(m = 0; m < NUMINPUTS; m = m + 1) begin 
+                resultReal[0][m] <= 0;
+                resultImg[0][m] <= 0;
+            end
         end else begin
-            result1[0] <= result_expected1;
-            result2[0] <= result_expected2;
-            result3[0] <= result_expected3;
-            result4[0] <= result_expected4;
-            result5[0] <= result_expected5;
-            result6[0] <= result_expected6;
-            result7[0] <= result_expected7;
-            result8[0] <= result_expected8;
+            for(m = 0; m < NUMINPUTS; m = m + 1) begin 
+                resultReal[0][m] <= result_expectedReal[m];
+                resultImg[0][m] <= result_expectedImg[m];
+            end
         end
     end
     // end here
     
+    genvar h;
 
-    //generates two stochastic bitstreams
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbA1 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbA1)
-    );
+    //generates stochastic bitstreams
+    generate
+    for(h = 0; h < NUMINPUTS*2; h = h + 1) begin :sobolrng_loop
+        sobolrng #(
+            .BITWIDTH(BITWIDTH)
+        ) u_sobolrng_tbA1 (
+            .iClk(iClk),
+            .iRstN(iRstN),
+            .iEn(1),
+            .iClr(iClr),
+            .sobolseq(sobolseq_tb[h])
+        );
+    end
+    endgenerate
     
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbB1 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbB1)
-    );
-
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbC1 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbC1)
-    );
-
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbD1 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbD1)
-    );
-
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbA2 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbA2)
-    );
-    
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbB2 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbB2)
-    );
-
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbC2 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbC2)
-    );
-
-    sobolrng #(
-        .BITWIDTH(BITWIDTH)
-    ) u_sobolrng_tbD2 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .iEn(1),
-        .iClr(iClr),
-        .sobolseq(sobolseq_tbD2)
-    );
 
     uSFFT #(
         .BITWIDTH(BITWIDTH),
@@ -536,26 +270,27 @@ module uSFFT_TB ();
         .iRstN(iRstN),
         .iClr(iClr),
         .loadW(loadW),
-        .iAReal0(iAReal0),
-        .iAImg0(iAImg0),
-        .iAReal1(iAReal1),
-        .iAImg1(iAImg1),
-        .iBReal0(iBReal0),
-        .iBImg0(iBImg0),
-        .iBReal1(iBReal1),
-        .iBImg1(iBImg1),
+        .iAReal0(iReal[0]),
+        .iAImg0(iImg[0]),
+        .iAReal1(iReal[1]),
+        .iAImg1(iImg[1]),
+        .iBReal0(iReal[2]),
+        .iBImg0(iImg[2]),
+        .iBReal1(iReal[3]),
+        .iBImg1(iImg[3]),
         .iwReal(iwReal),
         .iwImg(iwImg),
         .oBReal(oBReal),
         .oBImg(oBImg),
-        .oCReal0(oCReal0),
-        .oCImg0(oCImg0),
-        .oCReal1(oCReal1),
-        .oCImg1(oCImg1),
-        .oDReal0(oDReal0),
-        .oDImg0(oDImg0),
-        .oDReal1(oDReal1),
-        .oDImg1(oDImg1)
+        .o13Real0(oReal[0]),
+        .o13Img0(oImg[0]), //TODO: CHANGE BACK IF DOESNT WORK MADE IT LOGIC WITH 
+        .o13Real1(oReal[2]),
+        .o13Img1(oImg[2]),
+        .o24Real0(oReal[1]),
+        .o24Img0(oImg[1]),
+        .o24Real1(oReal[3]),
+        .o24Img1(oImg[3])
+
     );
 
     always #5 iClk = ~iClk;
@@ -564,59 +299,36 @@ module uSFFT_TB ();
         $dumpfile("uButterfly_tb.vcd"); $dumpvars;
 
         iClk = 1;
-        iAReal0 = 0;
-        iAImg0 = 0;
-        iAReal1 = 0;
-        iAImg1 = 0;
-        iBReal0 = 0;
-        iBImg0 = 0;
-        iBReal1 = 0;
-        iBImg1 = 0;
+        iReal = '{default: '0};
+        iImg = '{default: '0};
         iRstN = 0;
         iwReal = 0;
         iwImg = 0;
-        rand_iAReal0 = 0;
-        rand_iAImg0 = 0;
-        rand_iAReal1 = 0;
-        rand_iAImg1 = 0;
-        rand_iBReal0 = 0;
-        rand_iBImg0 = 0;
-        rand_iBReal1 = 0;
-        rand_iBImg1 = 0;
+        randReal = '{default: '0};
+        randImg = '{default: '0};
         iClr = 0;
         loadW = 1;
         error = new;
 
-
         #10;
         iRstN = 1;
 
-        
         //specified cycles of unary bitstreams
         repeat(`TESTAMOUNT) begin
-            rand_iAReal0 = $urandom_range(255);
-            rand_iAImg0 = $urandom_range(255);
-            rand_iAReal1 = $urandom_range(255);
-            rand_iAImg1 = $urandom_range(255);
-            rand_iBReal0 = $urandom_range(255);
-            rand_iBImg0 = $urandom_range(255);
-            rand_iBReal1 = $urandom_range(255);
-            rand_iBImg1 = $urandom_range(255);
+            for(int n = 0; n < NUMINPUTS; n++) begin
+                randReal[n] = $urandom_range(255);
+                randImg[n] = $urandom_range(255);
+            end
             iwReal = $urandom_range(255);
             iwImg = $urandom_range(255);
 
             repeat(256) begin
                 #10; 
-                iAReal0 = (rand_iAReal0 > sobolseq_tbA1);
-                iAImg0 = (rand_iAImg0 > sobolseq_tbB1);
-                iAReal1 = (rand_iAReal1 > sobolseq_tbC1);
-                iAImg1 = (rand_iAImg1 > sobolseq_tbD1);
-                iBReal0 = (rand_iBReal0 > sobolseq_tbA2);
-                iBImg0 = (rand_iBImg0 > sobolseq_tbB2);
-                iBReal1 = (rand_iBReal1 > sobolseq_tbC2);
-                iBImg1 = (rand_iBImg1 > sobolseq_tbD2);
-                error.count(iAReal0, iAImg0, iAReal1, iAImg1, iBReal0, iBImg0, iBReal1, iBImg1, oBReal, oBImg, 
-                oCReal0, oCImg0, oCReal1, oCImg1, oDReal0, oDImg0, oDReal1, oDImg1);
+                for(int u = 0; u < NUMINPUTS; u++) begin
+                    iReal[u] = (randReal[u] > sobolseq_tb[u]);
+                    iImg[u] = (randImg[u] > sobolseq_tb[u+4]);
+                end
+                error.count(iReal, iImg, resultReal[PPCYCLE-1], resultImg[PPCYCLE-1], oBReal, oBImg);
 
             end
             error.fSUM();
@@ -624,16 +336,12 @@ module uSFFT_TB ();
         end
 
         //gives final error results
+        error.fMSE();
+        error.fRMSE();
 
         iClr = 1;
-        iAReal0 = 0;
-        iAImg0 = 0;
-        iAReal1 = 0;
-        iAImg1 = 0;
-        iBReal0 = 0;
-        iBImg0 = 0;
-        iBReal1 = 0;
-        iBImg1 = 0;
+        iReal = '{default: '0};
+        iImg = '{default: '0};
         iwReal = 0;
         iwImg = 0;
         #400;
