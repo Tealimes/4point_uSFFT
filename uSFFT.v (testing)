@@ -8,127 +8,104 @@
 
 module uSFFT #(
     parameter BITWIDTH = 8,
-    parameter BINPUT = 2
+    parameter BINPUT = 2,
+    parameter NUMINPUT = 4
 ) (
     input wire iClk,
     input wire iRstN,
     input wire loadW,
     input wire iClr,
-    input wire iAReal0,
-    input wire iAImg0,
-    input wire iAReal1,
-    input wire iAImg1,
-    input wire iBReal0,
-    input wire iBImg0,
-    input wire iBReal1,
-    input wire iBImg1,
+    input wire [NUMINPUT-1:0] iReal,
+    input wire [NUMINPUT-1:0] iImg,
     input wire [BITWIDTH-1:0] iwReal,
     input wire [BITWIDTH-1:0] iwImg,
     output wire oBReal,
     output wire oBImg,
-    output wire oCReal0,
-    output wire oCImg0,
-    output wire oCReal1,
-    output wire oCImg1,
-    output wire oDReal0,
-    output wire oDImg0,
-    output wire oDReal1,
-    output wire oDImg1
-
+    output wire [NUMINPUT-1:0] oReal,
+    output wire [NUMINPUT-1:0] oImg
 );
 
     //the ouputs of the initial input butterflies
-    wire mid1_Real0;
-    wire mid1_Img0;
-    wire mid1_Real1;
-    wire mid1_Img1;
-    wire mid2_Real0;
-    wire mid2_Img0;
-    wire mid2_Real1;
-    wire mid2_Img1;
+    wire [NUMINPUT-1:0] mid_Real;
+    wire [NUMINPUT-1:0] mid_Img;
 
-    uButterfly #(
-        .BITWIDTH(BITWIDTH),
-        .BINPUT(BINPUT)
-    ) u_uButterfly_in1 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .loadW(loadW),
-        .iClr(iClr),
-        .iReal0(iAReal0),
-        .iImg0(iAImg0),
-        .iReal1(iAReal1),
-        .iImg1(iAImg1),
-        .iwReal(iwReal),
-        .iwImg(iwImg),
-        .oBReal(oBReal),
-        .oBImg(oBImg),
-        .oReal0(mid1_Real0),
-        .oImg0(mid1_Img0),
-        .oReal1(mid1_Real1),
-        .oImg1(mid1_Img1)
-    );
+    genvar i;
 
-    uButterfly #(
-        .BITWIDTH(BITWIDTH),
-        .BINPUT(BINPUT)
-    ) u_uButterfly_in2 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .loadW(loadW),
-        .iClr(iClr),
-        .iReal0(iBReal0),
-        .iImg0(iBImg0),
-        .iReal1(iBReal1),
-        .iImg1(iBImg1),
-        .iwReal(iwReal),
-        .iwImg(iwImg),
-        .oReal0(mid2_Real0),
-        .oImg0(mid2_Img0),
-        .oReal1(mid2_Real1),
-        .oImg1(mid2_Img1)
-    );
+    generate 
+        for(i=0; i<NUMINPUT/2; i = i + 1) begin
+            //for output of first twiddle factors
+            if(i == 0) begin 
+                uButterfly #(
+                    .BITWIDTH(BITWIDTH),
+                    .BINPUT(BINPUT)
+                ) u_uButterfly_in (
+                    .iClk(iClk),
+                    .iRstN(iRstN),
+                    .loadW(loadW),
+                    .iClr(iClr),
+                    .iReal0(iReal[(i*2)]),
+                    .iImg0(iImg[(i*2)]),
+                    .iReal1(iReal[(i*2)+1]),
+                    .iImg1(iImg[(i*2)+1]),
+                    .iwReal(iwReal),
+                    .iwImg(iwImg),
+                    .oBReal(oBReal),
+                    .oBImg(oBImg),
+                    .oReal0(mid_Real[(i*2)]),
+                    .oImg0(mid_Img[(i*2)]),      
+                    .oReal1(mid_Real[(i*2)+1]),
+                    .oImg1(mid_Img[(i*2)+1])
+                );
+            end else begin 
+                uButterfly #(
+                    .BITWIDTH(BITWIDTH),
+                    .BINPUT(BINPUT)
+                ) u_uButterfly_in (
+                    .iClk(iClk),
+                    .iRstN(iRstN),
+                    .loadW(loadW),
+                    .iClr(iClr),
+                    .iReal0(iReal[(i*2)]),
+                    .iImg0(iImg[(i*2)]),
+                    .iReal1(iReal[(i*2)+1]),
+                    .iImg1(iImg[(i*2)+1]),
+                    .iwReal(iwReal),
+                    .iwImg(iwImg),
+                    .oReal0(mid_Real[(i*2)]),
+                    .oImg0(mid_Img[(i*2)]),      
+                    .oReal1(mid_Real[(i*2)+1]),
+                    .oImg1(mid_Img[(i*2)+1])
+                );
+            end
+            
+        end
 
-    uButterfly #(
-        .BITWIDTH(BITWIDTH),
-        .BINPUT(BINPUT)
-    ) u_uButterfly_out13 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .loadW(loadW),
-        .iClr(iClr),
-        .iReal0(mid1_Real0),
-        .iImg0(mid1_Img0),
-        .iReal1(mid2_Real0),
-        .iImg1(mid2_Img0),
-        .iwReal(iwReal),
-        .iwImg(iwImg),
-        .oReal0(oCReal0),
-        .oImg0(oCImg0),
-        .oReal1(oCReal1),
-        .oImg1(oCImg1)
-    );
+    endgenerate
 
-    uButterfly #(
-        .BITWIDTH(BITWIDTH),
-        .BINPUT(BINPUT)
-    ) u_uButterfly_out24 (
-        .iClk(iClk),
-        .iRstN(iRstN),
-        .loadW(loadW),
-        .iClr(iClr),
-        .iReal0(mid1_Real1),
-        .iImg0(mid1_Img1),
-        .iReal1(mid2_Real1),
-        .iImg1(mid2_Img1),
-        .iwReal(iwReal),
-        .iwImg(iwImg),
-        .oReal0(oDReal0),
-        .oImg0(oDImg0),
-        .oReal1(oDReal1),
-        .oImg1(oDImg1)
-    );
-
+    genvar j;
+    generate 
+        for(j=0; j < NUMINPUT/2; j = j + 1) begin
+            uButterfly #(
+                .BITWIDTH(BITWIDTH),
+                .BINPUT(BINPUT)
+            ) u_uButterfly_out (
+                .iClk(iClk),
+                .iRstN(iRstN),
+                .loadW(loadW),
+                .iClr(iClr),
+                .iReal0(mid_Real[j]),
+                .iImg0(mid_Img[j]),
+                .iReal1(mid_Real[j + NUMINPUT/2]),
+                .iImg1(mid_Img[j + NUMINPUT/2]),
+                .iwReal(iwReal),
+                .iwImg(iwImg),
+                .oReal0(oReal[j]),
+                .oImg0(oImg[j]),
+                .oReal1(oReal[j + NUMINPUT/2]),
+                .oImg1(oImg[j + NUMINPUT/2])
+            );
+        end
+    endgenerate
 endmodule
 
 `endif 
