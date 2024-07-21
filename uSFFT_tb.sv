@@ -48,8 +48,8 @@ class errorcheck;
             cntImg[f] = cntImg[f] + b[f];
             outReal[f] = outReal[f] + c[f];
             outImg[f] = outImg[f] + d[f];
-
         end
+
         cntiwReal = cntiwReal + oA;
         cntiwImg = cntiwImg + oB;
         fdenom++;
@@ -73,10 +73,9 @@ class errorcheck;
             biReal[d] = (2*(cntReal[d]/fdenom)) - 1;
             biImg[d] = (2*(cntImg[d]/fdenom)) - 1;
         end
+
         biwReal = (2*(cntiwReal/fdenom)) - 1;
         biwImg = (2*(cntiwImg/fdenom)) - 1;
-
-
         
         $display("Run <%.0f>: ", j);
         $display("Number of 1s in input wReal = %.0f", cntiwReal);
@@ -90,6 +89,7 @@ class errorcheck;
             $display("Bipolar Real[%0d] value = %.9f", r, biReal[r]);
             $display("Bipolar Image[%0d] value = %.9f\n", r, biImg[r]);
         end
+
         $display("Bipolar wReal value = %.9f", biwReal);
         $display("Bipolar wImg value = %.9f\n", biwImg);
 
@@ -99,6 +99,7 @@ class errorcheck;
             uResult_Img[y] = (2*(outImg[y]/fdenom)) - 1;
             $display("Unary result[%0d] = %.9f + %.9fi", y, uResult_Real[y], uResult_Img[y]);
         end
+        $display("\n");
         
         //middle expected results      
         for(int e = 0; e < (`NUMINPUTS_C/2); e++) begin
@@ -107,21 +108,19 @@ class errorcheck;
             bimid_Real[(e*2)+1] = (biReal[(e*2)] - ((biReal[(e*2)+1]*biwReal) - (biImg[(e*2)+1]*biwImg)))/4;
             bimid_Img[(e*2)+1] = (biImg[(e*2)] - ((biReal[(e*2)+1]*biwImg) + (biImg[(e*2)+1]*biwReal)))/4;
         end
-        
-        //expected results
-        eResult_Real[0] = (bimid_Real[0] + ((bimid_Real[2]*biwReal) - (bimid_Img[2]*biwImg)))/4; 
-        eResult_Img[0] = (bimid_Img[0] + ((bimid_Real[2]*biwImg) + (bimid_Img[2]*biwReal)))/4;
-        eResult_Real[2] = (bimid_Real[0] - ((bimid_Real[2]*biwReal) - (bimid_Img[2]*biwImg)))/4;
-        eResult_Img[2] = (bimid_Img[0] - ((bimid_Real[2]*biwImg) + (bimid_Img[2]*biwReal)))/4;
-        eResult_Real[1] = (bimid_Real[1] + ((bimid_Real[3]*biwReal) - (bimid_Img[3]*biwImg)))/4; 
-        eResult_Img[1] = (bimid_Img[1] + ((bimid_Real[3]*biwImg) + (bimid_Img[3]*biwReal)))/4;
-        eResult_Real[3] = (bimid_Real[1] - ((bimid_Real[3]*biwReal) - (bimid_Img[3]*biwImg)))/4;
-        eResult_Img[3] = (bimid_Img[1] - ((bimid_Real[3]*biwImg) + (bimid_Img[3]*biwReal)))/4;
 
+        for(int w = 0; w < `NUMINPUTS_C/2; w++) begin
+            eResult_Real[w] = (bimid_Real[w] + ((bimid_Real[w+`NUMINPUTS_C/2]*biwReal) - (bimid_Img[w+`NUMINPUTS_C/2]*biwImg)))/4; 
+            eResult_Img[w] = (bimid_Img[w] + ((bimid_Real[w+`NUMINPUTS_C/2]*biwImg) + (bimid_Img[w+`NUMINPUTS_C/2]*biwReal)))/4;
+            eResult_Real[w+`NUMINPUTS_C/2] = (bimid_Real[w] - ((bimid_Real[w+`NUMINPUTS_C/2]*biwReal) - (bimid_Img[w+`NUMINPUTS_C/2]*biwImg)))/4;
+            eResult_Img[w+`NUMINPUTS_C/2] = (bimid_Img[w] - ((bimid_Real[w+`NUMINPUTS_C/2]*biwImg) + (bimid_Img[w+`NUMINPUTS_C/2]*biwReal)))/4;
+        end
+        
 
         for(int s = 0; s < `NUMINPUTS_C; s++) begin
             $display("Expected result[%0d] = %.9f + %.9fi", s, eResult_Real[s], eResult_Img[s]);
         end
+        $display("\n");
 
         for(int i = 0; i < `NUMINPUTS_C; i++) begin
             asum_Real[i] = asum_Real[i] + ((uResult_Real[i] - eResult_Real[i]) * (uResult_Real[i] - eResult_Real[i]));
@@ -132,7 +131,6 @@ class errorcheck;
         $display("\n");
         
         //resets for next bitstreams
-
         fdenom = 0;
         cntReal = '{default: '0};
         cntImg = '{default: '0};
@@ -248,17 +246,31 @@ module uSFFT_TB ();
 
     //generates stochastic bitstreams
     generate
-    for(h = 0; h < NUMINPUTS*2; h = h + 1) begin :sobolrng_loop
-        sobolrng #(
-            .BITWIDTH(BITWIDTH)
-        ) u_sobolrng_tbA1 (
-            .iClk(iClk),
-            .iRstN(iRstN),
-            .iEn(1),
-            .iClr(iClr),
-            .sobolseq(sobolseq_tb[h])
-        );
-    end
+        for(h = 0; h < NUMINPUTS*2; h = h + 1) begin :sobolrng_loop
+            sobolrng #(
+                .BITWIDTH(BITWIDTH)
+            ) u_sobolrng_tbA1 (
+                .iClk(iClk),
+                .iRstN(iRstN),
+                .iEn(1),
+                .iClr(iClr),
+                .sobolseq(sobolseq_tb[h])
+            );
+        end
+    endgenerate
+
+    //converts array into vector form
+    genvar p;
+    logic [NUMINPUTS-1:0] iReal_v;
+    logic [NUMINPUTS-1:0] iImg_v;
+    logic [NUMINPUTS-1:0] oReal_v;
+    logic [NUMINPUTS-1:0] oImg_v;
+
+    generate 
+        for(p = 0; p < NUMINPUTS; p = p + 1) begin 
+            assign iReal_v[p] = iReal[p];
+            assign iImg_v[p] = iImg[p];
+        end
     endgenerate
     
 
@@ -270,28 +282,24 @@ module uSFFT_TB ();
         .iRstN(iRstN),
         .iClr(iClr),
         .loadW(loadW),
-        .iAReal0(iReal[0]),
-        .iAImg0(iImg[0]),
-        .iAReal1(iReal[1]),
-        .iAImg1(iImg[1]),
-        .iBReal0(iReal[2]),
-        .iBImg0(iImg[2]),
-        .iBReal1(iReal[3]),
-        .iBImg1(iImg[3]),
+        .iReal(iReal_v),
+        .iImg(iImg_v),
         .iwReal(iwReal),
         .iwImg(iwImg),
         .oBReal(oBReal),
         .oBImg(oBImg),
-        .o13Real0(oReal[0]),
-        .o13Img0(oImg[0]), //TODO: CHANGE BACK IF DOESNT WORK MADE IT LOGIC WITH 
-        .o13Real1(oReal[2]),
-        .o13Img1(oImg[2]),
-        .o24Real0(oReal[1]),
-        .o24Img0(oImg[1]),
-        .o24Real1(oReal[3]),
-        .o24Img1(oImg[3])
-
+        .oReal(oReal_v),
+        .oImg(oImg_v)
     );
+
+    //turns vectors back into arrays
+    genvar t;
+    generate 
+        for(t = 0; t < NUMINPUTS; t = t + 1) begin 
+            assign oReal[t] = oReal_v[t];
+            assign oImg[t] = oImg_v[t];
+        end
+    endgenerate
 
     always #5 iClk = ~iClk;
 
